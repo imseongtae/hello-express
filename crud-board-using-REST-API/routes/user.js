@@ -5,6 +5,13 @@ const crypto = require('crypto')
 
 const models = require("../models");
 
+// 메인 페이지
+router.get('/', function(req, res, next) {
+  if (req.cookies) {
+    console.log(req.cookies);
+  }
+  res.send('환영합니다~');
+});
 
 router.get('/sign_up', function(req, res, next) {
   res.render("user/signup");
@@ -26,12 +33,57 @@ router.post("/sign_up", function(req,res,next){
     salt
   })
   .then( result => {
-    res.redirect("/users/sign_up");
+    res.redirect("/user/sign_up");
   })
   .catch( err => {
     console.log('무슨 에러인가 모르겠구만');
     console.log(err)
   })
+})
+
+// 로그인 GET
+router.get('/login', function(req, res, next) {
+  const session = req.session;
+  // res.render("user/login");
+  res.render('user/login', {
+    session
+  })
+});
+
+router.post('/login', async (req, res, next) => {
+  const body = req.body;
+
+  const result = await models.user.findOne({
+    where: {
+      email: body.userEmail
+    }
+  })
+
+  const dbPassword = result.dataValues.password;
+  const inputPassword = body.password;
+  const salt = result.dataValues.salt;
+  const hashPassword = crypto.createHash('sha512').update(inputPassword + salt).digest('hex')
+
+  if (dbPassword === hashPassword) {
+    console.log('비밀번호 일치');
+    req.session.email = body.userEmail;
+    // cookie setting
+    // res.cookie('user', body.userEmail, {
+    //   expires: new Date(Date.now() + 900000),
+    //   httpOnly: true,
+    // });    
+  } else {
+    console.log('비밀번호 불일치');
+  }
+  // 성공시 성공화면, 실패한다면 실패화면
+  res.redirect('/user/login')    
+})
+
+router.get('/logout', (req, res, next) => {
+  req.session.destroy();
+  res.clearCookie('sid')
+  
+  res.redirect('/user/login')
 })
 
 // router.post("/sign_up", function(req,res,next){
@@ -50,5 +102,8 @@ router.post("/sign_up", function(req,res,next){
 //     });
 //   });
 // })
+
+
+
 
 module.exports = router;
