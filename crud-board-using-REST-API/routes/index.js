@@ -28,13 +28,26 @@ router.get('/', function(req, res, next) {
 //   });
 // });
 
-router.get('/board', function(req, res, next) {
-  models.post.findAll().then(result => {
-    res.render('show', {posts: result});
+router.get('/board', async (req, res, next) => {
+  let result = await models.post.findAll();
+  if(result) {
+    for (const post of result) {
+      let result2 = await models.post.findOne({
+        include: {
+          model: models.reply,
+          where: {
+            postId: post.id
+          }
+        }
+      })
+      if (result2) {
+        post.replies = result2.replies
+      }
+    }
+  }
+  res.render('show', {
+    posts: result
   })
-  .catch(function(err){
-    console.log(err);
-  });
 });
 
 router.post('/board', function(req, res, next) {
@@ -111,5 +124,40 @@ router.delete('/board/:id', function(req, res, next) {
 //     res.redirect("/create");
 //   });
 // });
+
+router.post('/reply/:postId', function(req, res, next) {
+  let postId = req.params.postId;
+  let body = req.body;
+
+  models.reply.create({
+    postId: postId,
+    writer: body.replyWriter,
+    content: body.replyContent
+  })
+  .then(results => {
+    res.redirect("/board");
+  })
+  .catch( err => {
+    console.log(err);
+  });
+})
+
+// router.post("/reply/:postID", function(req, res, next){
+//   let postID = req.params.postID;
+//   let body = req.body;
+
+//   models.reply.create({
+//     postId: postID,
+//     writer: body.replyWriter,
+//     content: body.replyContent
+//   })
+//   .then(results => {
+//     res.redirect("/board");
+//   })
+//   .catch( err => {
+//     console.log(err);
+//   });
+// });
+
 
 module.exports = router;

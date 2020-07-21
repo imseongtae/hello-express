@@ -29,10 +29,12 @@ var server = http.createServer(app);
 
 
 syncDb().then(() => {
+  console.log('=======================================');
   console.log('DB access success');
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
+  console.log('=======================================');
 }).catch(err => {
   console.log('연결 실패');
   console.log(err);
