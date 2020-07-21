@@ -20,6 +20,7 @@ const sequelize = new Sequelize(
 db.user2 = require('./user2')(sequelize, Sequelize);
 db.post = require('./post')(sequelize, Sequelize);
 db.reply = require('./reply')(sequelize, Sequelize);
+db.user = require('./user')(sequelize, Sequelize);
 
 
 
